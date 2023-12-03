@@ -1,0 +1,19 @@
+Restful toDo list API utilizing express and postgresql
+
+Data 
+{toDos: [{
+name: string, 
+          created: {
+type: Date, 
+              default: Date.now()
+          },
+    completed: {
+            type: boolean, 
+            default: false
+        }
+]}
+
+Create basic CRUD functionality
+Allow for two update types, name and completed status 
+
+
