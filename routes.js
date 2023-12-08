@@ -1,57 +1,43 @@
 import express from "express";
+import asyncHandler from "express-async-handler";
 import queries from "./queries.js";
 import pool from "./db.js";
 const router = express.Router();
 
-router.get("/", (req,res) => {
-    pool.query(queries.allTodos, (err, results) => {
-        if (err) throw err; 
-        res.status(200).json(results.rows);
-    });
-});
-router.get("/:id", (req,res) => {
-    pool.query(queries.aTodo,[req.params.id], (err, results) => {
-        if (err) throw err; 
-        res.status(200).json(results.rows);
-    });
-});
+router.get("/", asyncHandler(async (req,res) => {
+    const results = await pool.query(queries.allTodos)
+    res.status(200).json(results.rows);
+}));
+router.get("/:id", asyncHandler(async (req,res) => {
+    const index = parseInt(req.params.id);
+    const results = await pool.query(queries.aTodo,[index])
+    res.status(200).json(results.rows);
+}));
 
-router.post("/creation", (req,res) => {
+router.post("/creation", asyncHandler(async (req,res) => {
     let name= req.body.name;
-    pool.query(queries.newTodo, [name, new Date(), false],(err, results) => {
-        pool.query(queries.byName, [name], (err, rez) => {
-            if (err) throw err; 
-            res.status(200).json(rez.rows);
-        });
-    });
-});
+    const creation = await pool.query(queries.newTodo, [name, new Date(), false])
+    const newest = await pool.query(queries.byName, [name])
+    res.status(200).json(newest.rows);
+}));
 
-router.delete("/deletion/:id", (req, res) => {
+router.delete("/deletion/:id", asyncHandler(async (req, res) => {
     let index = parseInt(req.params.id);
-    pool.query(queries.deleteTodo, [index], (err, results) => {
-        if (err) throw err;
-        res.send("The todo at: " + index + " has been deleted.");
-    });
-});
+    const results = await pool.query(queries.deleteTodo, [index])
+    res.send("The todo at: " + index + " has been deleted.");
+}));
 
-router.post("/:id/name", (req, res) => {
+router.post("/:id/name", asyncHandler(async (req, res) => {
     let index = parseInt(req.params.id);
-    pool.query(queries.changeName, [req.body.name, index], (err, results) => {
-        if (err) throw err;
-        pool.query(queries.aTodo, [index], (err, results) => {
-            if (err) throw err; 
-            res.status(200).json(results.rows);
-        });
-    });
-});
-router.get("/:id/status", (req, res) => {
+    const edited = await pool.query(queries.changeName, [req.body.name, index])
+    const results = await pool.query(queries.aTodo, [index]) 
+    res.status(200).json(results.rows);
+}));
+router.get("/:id/status", asyncHandler(async (req, res) => {
     let index = parseInt(req.params.id);
-    pool.query(queries.changeStatus, [index], (err, results) => {
-        pool.query(queries.aTodo, [index], (errz, resz) => {
-            if (errz) throw errz;
-            res.status(200).json(resz.rows);
-        }); 
-    });
-});
+    const statusChange = pool.query(queries.changeStatus, [index])
+    const results = pool.query(queries.aTodo, [index])
+    res.status(200).json(results.rows);
+}));
 
 export default router; 
