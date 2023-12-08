@@ -19,8 +19,10 @@ router.get("/:id", (req,res) => {
 router.post("/creation", (req,res) => {
     let name= req.body.name;
     pool.query(queries.newTodo, [name, new Date(), false],(err, results) => {
-        if (err) throw err;
-        res.status(200).send("Todo created with name: " + name);
+        pool.query(queries.byName, [name], (err, rez) => {
+            if (err) throw err; 
+            res.status(200).json(rez.rows);
+        });
     });
 });
 
